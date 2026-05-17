@@ -18,7 +18,6 @@ build/
 
 # ─── Data ─────────────────────────────────────────────────────────────────────
 data/raw/
-data/processed/
 *.csv
 *.zip
 
@@ -80,9 +79,4 @@ src/monitoring/monitor.py
 # api
 src/api/__pycache__/
 
-# Others
-commandes_bash.md
-.github/workflows/ct_old_version.yml
-src/training/test_retrain_pipeline.py
-requirements_update.py
-.md
+
