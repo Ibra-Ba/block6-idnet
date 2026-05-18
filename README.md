@@ -3,23 +3,23 @@
 Projet de certification Bac+4 — Direction de projets de gestion de données  
 **Jedha Bootcamp | Fullstack**
 
-## Contexte
-
-La fraude documentaire représente un enjeu majeur pour les organisations 
-soumises aux obligations KYC (Know Your Customer) et aux réglementations 
-eIDAS. Ce projet implémente un système de détection automatique de documents 
-d'identité frauduleux par deep learning.
-
 ## Démo
 
 👉 [ID Check Demo — Hugging Face Space](https://huggingface.co/spaces/VoxUp/id-check-demo)
+
+## Contexte
+
+La fraude documentaire représente un enjeu majeur pour les organisations
+soumises aux obligations KYC (Know Your Customer) et aux réglementations
+eIDAS. Ce projet implémente un système de détection automatique de documents
+d'identité frauduleux par deep learning.
 
 ## Dataset
 
 - **Source** : [IDNet — Zenodo](https://zenodo.org/records/10462204)
 - **Sous-ensemble** : Documents espagnols (ESP)
 - **Classes** : `genuine` (authentique) vs `fraud` (frauduleux)
-- **6 types de fraude** : copy & move, face morphing, face replacement, 
+- **6 types de fraude** : copy & move, face morphing, face replacement,
   combined, inpaint & rewrite, crop & replace
 - **Rééchantillonnage** : 30% fraude / 70% genuine
 
@@ -55,16 +55,27 @@ d'identité frauduleux par deep learning.
 bloc6-idnet/
 ├── src/
 │   ├── data/
-│   │   ├── dataset.py        # Dataset PyTorch + transforms
 │   └── models/
-│       ├── config.py         # Hyperparamètres et constantes
-│       ├── efficientnet.py   # Architecture EfficientNet-B0
-│       ├── train.py          # Entraînement 2 phases
-│       ├── evaluate.py       # Évaluation + métriques
-│       └── register_model.py # Publication MLflow Registry
-├── app.py                    # Interface Streamlit
-├── Dockerfile                # Déploiement HF Space
-└── requirements.txt
+├── space/
+│   ├── inference_app/
+│   │   ├── app.py
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── README.md
+│   └── mlflow_server/
+│       ├── Dockerfile
+│       ├── entrypoint.sh
+│       ├── requirements.txt
+│       └── README.md
+├── data/processed/
+├── .env.example
+├── .gitignore
+├── requirements.txt
+├── pyproject.toml
+└── README.md
+
+
+
 
 ## Configuration de l'environnement
 
@@ -113,6 +124,68 @@ cp .env.example .env
 
 ### Note WSL2
 
-Sur WSL2/Ubuntu avec CPU uniquement, `NUM_WORKERS=0` est obligatoire 
-dans les DataLoaders (pas de fork multiprocessing). Cette valeur est 
+Sur WSL2/Ubuntu avec CPU uniquement, `NUM_WORKERS=0` est obligatoire
+dans les DataLoaders (pas de fork multiprocessing). Cette valeur est
 déjà configurée par défaut dans `src/models/config.py`.
+
+## Utilisation
+
+### Entraînement
+```bash
+python -m src.models.train
+```
+
+### Évaluation
+```bash
+python -m src.models.evaluate <run_id>
+```
+
+### Publication du modèle
+```bash
+python -m src.models.register_model <run_id>
+```
+
+### App locale
+```bash
+# Depuis space/inference_app/
+streamlit run app.py
+```
+
+## Source de vérité
+
+Le dossier `space/` contient les sources de vérité pour les deux HF Spaces.
+Après toute modification, mettre à jour le Space HF correspondant :
+
+```bash
+# Inference app
+cp space/inference_app/* ~/fullstack-certification/bloc6/id-check-demo/
+
+# MLflow server
+cp space/mlflow_server/* <chemin_local_mlflow_server>/
+```
+
+> **Note** : Le `requirements.txt` de `space/inference_app/` ne contient
+> pas `scikit-learn` et `pandas` — uniquement les dépendances nécessaires
+> à l'inférence.
+
+## Architecture globale
+
+┌─────────────────────┐
+                │   MLflow Server      │
+                │   HF Space           │
+                │   NeonDB + AWS S3    │
+                └──────────┬──────────┘
+                           │ @champion
+                ┌──────────▼──────────┐
+                │   ID Check Demo      │
+                │   HF Space           │
+                │   Streamlit          │
+                └─────────────────────┘
+
+
+## Relation avec le bloc4 de lead
+
+Ce projet constitue le socle data science du système de détection.
+Le projet de certification du bloc4 de lead y ajoute la couche MLOps complète : CI/CD GitHub Actions,
+tests automatisés, monitoring et réentraînement continu.
+
